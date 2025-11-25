@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock & Stopwatch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .clock, .stopwatch {
+            background: #fff;
+            padding: 20px 40px;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+
+        .time {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="clock">
+        <h1>Clock</h1>
+        <div class="time" id="clockTime">00:00:00</div>
+    </div>
+
+    <div class="stopwatch">
+        <h1>Stopwatch</h1>
+        <div class="time" id="stopwatchTime">00:00:00</div>
+        <div>
+            <button id="startStop">Start</button>
+            <button id="reset">Reset</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CLOCK ---
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clockTime').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- STOPWATCH ---
+        let stopwatchInterval;
+        let elapsedTime = 0; // in seconds
+        let running = false;
+
+        function updateStopwatch() {
+            let hours = Math.floor(elapsedTime / 3600);
+            let minutes = Math.floor((elapsedTime % 3600) / 60);
+            let seconds = elapsedTime % 60;
+
+            hours = String(hours).padStart(2, '0');
+            minutes = String(minutes).padStart(2, '0');
+            seconds = String(seconds).padStart(2, '0');
+
+            document.getElementById('stopwatchTime').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        document.getElementById('startStop').addEventListener('click', () => {
+            if (!running) {
+                running = true;
+                document.getElementById('startStop').textContent = 'Stop';
+                stopwatchInterval = setInterval(() => {
+                    elapsedTime++;
+                    updateStopwatch();
+                }, 1000);
+            } else {
+                running = false;
+                document.getElementById('startStop').textContent = 'Start';
+                clearInterval(stopwatchInterval);
+            }
+        });
+
+        document.getElementById('reset').addEventListener('click', () => {
+            running = false;
+            clearInterval(stopwatchInterval);
+            elapsedTime = 0;
+            updateStopwatch();
+            document.getElementById('startStop').textContent = 'Start';
+        });
+
+        updateStopwatch();
+    </script>
+</body>
+</html>
