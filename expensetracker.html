@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Expense Tracker with Advanced Filters</title>
+<style>
+    body{
+        font-family: Poppins, Arial;
+        background: linear-gradient(135deg,#0f1724,#1e293b);
+        color:rgb(209, 187, 187);
+        padding:20px;
+        min-height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:flex-start;
+    }
+
+    .box{
+        width:90%;
+        max-width:480px;
+        background: rgba(255,255,255,0.07);
+        padding:25px;
+        border-radius:20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        backdrop-filter: blur(10px);
+    }
+
+    h2{
+        text-align:center;
+        font-size:26px;
+        margin-top:0;
+    }
+
+    input, select{
+        width:100%;
+        padding:12px;
+        margin:8px 0;
+        border:none;
+        border-radius:10px;
+        background:rgba(255,255,255,0.15);
+        color:rgb(65, 52, 52);
+    }
+
+    button{
+        width:100%;
+        padding:12px;
+        margin:12px 0;
+        background: linear-gradient(135deg,#6ee7b7,#3b82f6);
+        border:none;
+        border-radius:12px;
+        color:#022;
+        font-weight:bold;
+        cursor:pointer;
+    }
+
+    .balance-box{
+        background:rgba(255,255,255,0.1);
+        padding:15px;
+        border-radius:15px;
+        text-align:center;
+    }
+    .balance-value{
+        font-size:28px;
+        color:#6ee7b7;
+        font-weight:bold;
+    }
+
+    .item{
+        background:rgba(255,255,255,0.09);
+        margin:10px 0;
+        padding:12px;
+        border-radius:10px;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+    }
+
+    .red{ color:#ff6b6b; font-weight:bold; }
+    .green{ color:#6ee7b7; font-weight:bold; }
+
+    .tag{
+        padding:3px 8px;
+        border-radius:6px;
+        font-size:12px;
+        font-weight:bold;
+        color:#022;
+        margin-right:6px;
+    }
+
+    .title-line{
+        font-size:18px;
+        margin-top:20px;
+        padding-bottom:5px;
+        border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+</style>
+</head>
+<body>
+
+<div class="box">
+
+    <h2> Expense Tracker</h2>
+
+    <div class="balance-box">
+        <div class="balance-title">Current Balance</div>
+        <div class="balance-value" id="bal">0</div>
+    </div>
+
+    <input id="desc" placeholder="Description (e.g., Coffee)">
+    <input id="amount" placeholder="Amount (e.g., -20 or 50)">
+
+    <select id="category">
+        <option value="General">General</option>
+        <option value="Food">Food</option>
+        <option value="Transport">Transport</option>
+        <option value="Shopping">Shopping</option>
+        <option value="Bills">Bills</option>
+        <option value="Income">Income</option>
+    </select>
+
+    <button onclick="add()">Add Transaction</button>
+
+    <div class="title-line">Filters</div>
+    <select id="filterCategory" onchange="show()">
+        <option value="All">All Categories</option>
+        <option value="Income">Income</option>
+        <option value="Food">Food</option>
+        <option value="Transport">Transport</option>
+        <option value="Shopping">Shopping</option>
+        <option value="Bills">Bills</option>
+        <option value="General">General</option>
+    </select>
+
+    <select id="filterType" onchange="show()">
+        <option value="All">All</option>
+        <option value="IncomeOnly">Income Only</option>
+        <option value="ExpenseOnly">Expenses Only</option>
+    </select>
+
+    <input id="searchText" placeholder="Search description..." oninput="show()">
+
+    <div class="title-line">Transactions</div>
+    <div id="list"></div>
+
+</div>
+
+
+<script>
+let key = "simpleDataCat";
+let data = localStorage.getItem(key) || "";
+
+let listBox = document.getElementById("list");
+let balBox = document.getElementById("bal");
+
+show();
+
+function add(){
+    let d = document.getElementById("desc").value;
+    let a = document.getElementById("amount").value;
+    let c = document.getElementById("category").value;
+
+    if(d=="" || a==""){
+        alert("Please enter both fields");
+        return;
+    }
+
+    data += d + "," + a + "," + c + "\n";
+    localStorage.setItem(key, data);
+
+    document.getElementById("desc").value = "";
+    document.getElementById("amount").value = "";
+    document.getElementById("category").value = "General";
+
+    show();
+}
+
+function show(){
+    let filterCat = document.getElementById("filterCategory").value;
+    let filterType = document.getElementById("filterType").value;
+    let search = document.getElementById("searchText").value.toLowerCase();
+
+    listBox.innerHTML = "";
+    balBox.innerHTML = "0";
+
+    let balance = 0;
+    let lines = data.split("\n");
+
+    for(let i=0;i<lines.length;i++){
+        let line = lines[i].trim();
+        if(line==="") continue;
+
+        let parts = line.split(",");
+        let desc = parts[0];
+        let amt = Number(parts[1]);
+        let cat = parts[2];
+
+        balance += amt;
+
+        // filters
+        if(filterCat!=="All" && filterCat !== cat) continue;
+        if(filterType === "IncomeOnly" && amt <=0) continue;
+        if(filterType === "ExpenseOnly" && amt >=0) continue;
+        if(search && !desc.toLowerCase().includes(search)) continue;
+
+        let div = document.createElement("div");
+        div.className = "item";
+
+        let color = amt<0 ? "red" : "green";
+        let tagColor = getTagColor(cat);
+
+        let tag = "<span class='tag' style='background:"+tagColor+"'>"+cat+"</span>";
+
+        div.innerHTML = tag + desc + " <span class='" + color + "'>" + amt + "</span>";
+
+        listBox.appendChild(div);
+    }
+
+    balBox.innerHTML = balance;
+}
+
+function getTagColor(cat){
+    switch(cat){
+        case "Income": return "#6ee7b7";
+        case "Food": return "#fb923c";
+        case "Transport": return "#60a5fa";
+        case "Shopping": return "#f472b6";
+        case "Bills": return "#22d3ee";
+        default: return "#94a3b8"; // General
+    }
+}
+</script>
+
+</body>
+</html>
